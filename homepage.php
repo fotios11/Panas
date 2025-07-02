@@ -24,7 +24,6 @@ $balance = 320.50;
 </div>
 
     <div class="settings">
-      <a href="#">Account Settings</a>
       <a href="logout.php" class="logout-button">Logout</a>
     </div>
   </div>
