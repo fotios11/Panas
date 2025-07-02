@@ -1,0 +1,100 @@
+USER STORIES
+------------
+USER 1: New User
+USER 2: Existing User
+
+FOR USER 1
+USER STORIES:
+
+	--- NU-US-1 Register an Account ---
+As a new user, I want to register an account so I can begin using the tracker.
+Happy:
+Given a new user provides all required details
+When they submit the registration form
+Then the system should create the account and redirect to the login page or dashboard
+Unhappy:
+Given a user submits the form with missing required fields (e.g., no password or username)
+When they submit the form
+Then the system should show an error and not register the account
+
+	--- NU-US-2 – Choose Currency During Registration ---
+As a new user, I want to select my preferred currency when I register, so all financial data is shown in the right format.
+Happy:
+Given a registered user enters correct credentials
+When they click “Log In”
+Then the system should log them in and redirect to their dashboard
+Unhappy:
+Given a user enters an incorrect username or password
+When they try to log in
+Then the system should display an “Invalid credentials” message and remain on the login page
+
+	--- NU-US-3 – Log In ---
+As a new user, I want to log in to the system after registration so I can access my account.
+Happy:
+Given a user selects a valid currency during registration
+When the form is submitted
+Then the selected currency is saved to their profile and used throughout the app
+Unhappy:
+Given a user skips or submits an invalid currency (e.g. script manipulation)
+When they register
+Then the system should reject the form with an error
+
+	--- NU-US-4 – Add a Starting Balance ---
+As a new user, I want to optionally enter a starting balance during registration so my financial tracking begins with my real-life cash on hand.
+Happy:
+Given a user enters a positive number in the “starting balance” field
+When they register
+Unhappy:
+Given a user enters an invalid value (e.g. letters or a negative number)
+When they submit the form
+Then the system should display a validation error and not save the transaction
+
+FOR USER 2
+USER STORIES:
+
+	--- EU-US-1 – Add Income/Expense ---
+As an existing user, I want to add financial entries so I can track my budget over time.
+Happy:
+Given a logged-in user enters a valid amount, type (income/expense), and category
+When they submit the transaction form
+Then the transaction should be saved and visible in their history
+Unhappy:
+Given a user enters an invalid amount (e.g. letters or negative number for income)
+When they submit the form
+Then the system should show a validation error and not save the entry
+
+	--- EU-US-2 – Set Targets, Reminders, Warnings ---
+As an existing user, I want to set financial goals and alerts so I stay within budget.
+Happy:
+Given a user fills out valid inputs (e.g., a positive target amount, a non-empty reminder message, a numeric threshold)
+When they submit the form
+Then the data is stored and appears in their dashboard or alerts
+Unhappy:
+Given a user enters an invalid value (e.g., empty reminder message, negative warning threshold, non-numeric target)
+When they try to save
+Then the system should show a validation error and not proceed
+
+
+	--- EU-US-3 – View Budget Totals ---
+As an existing user, I want to see total income and expenses on my dashboard so I get a quick financial summary.
+Happy:
+Given a user is logged in and has added transactions
+When they visit the dashboard
+Then they should see total income, total expenses, and current balance using their chosen currency
+Unhappy:
+Given a user is logged in
+And they haven’t added any income or expenses yet
+When they visit the dashboard
+Then the system should clearly show that no financial data is available, with a message like “You haven’t added any transactions yet
+
+	--- EU-US-4 – Prevent Overspending --- 
+As an existing user, I want the app to block expenses that exceed my available balance so I don’t go into the negative.
+Happy:
+Given a user tries to add an expense less than or equal to their current balance
+When they submit the form
+Then the expense is saved successfully
+Unhappy:
+Given a user tries to add an expense that would make their balance negative
+When they submit the form
+Then the system should show an error and prevent the transaction
+
