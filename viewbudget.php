@@ -60,7 +60,6 @@
 
     <div class="settings">
       <a href="homepage.php">← Back to Home</a>
-      <a href="/logout" class="logout-button">Logout</a>
     </div>
   </div>
 </body>
