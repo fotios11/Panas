@@ -1,3 +1,29 @@
+<?php
+require_once 'db.php';
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $username = trim($_POST["username"]);
+    $password = $_POST["password"];
+
+    if (!$username || !$password) {
+        $error = "Please enter username and password.";
+    } else {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && $user['password'] === $password) { // no hashing as per request
+            $_SESSION['user_id'] = $user['id'];
+            header("Location: homepage.php");
+            exit();
+        } else {
+            $error = "Invalid credentials.";
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

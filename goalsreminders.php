@@ -1,3 +1,39 @@
+<?php
+require_once 'db.php';
+requireLogin();
+$user = getCurrentUser();
+$db = getDB();
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $target_savings = $_POST['target_savings'] ?? null;
+    $preferred_minimum_balance = $_POST['preferred_minimum_balance'] ?? null;
+
+    if (($target_savings !== null && (!is_numeric($target_savings) || $target_savings < 0)) ||
+        ($preferred_minimum_balance !== null && (!is_numeric($preferred_minimum_balance) || $preferred_minimum_balance < 0))) {
+        $error = "Please enter valid positive numbers or leave fields empty.";
+    } else {
+        // Check if goal already exists
+        $stmt = $db->prepare("SELECT id FROM goals WHERE user_id = ?");
+        $stmt->execute([$user['id']]);
+        if ($goal = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            // Update
+            $stmt = $db->prepare("UPDATE goals SET target_savings = ?, preferred_minimum_balance = ? WHERE user_id = ?");
+            $stmt->execute([$target_savings, $preferred_minimum_balance, $user['id']]);
+        } else {
+            // Insert
+            $stmt = $db->prepare("INSERT INTO goals (user_id, target_savings, preferred_minimum_balance) VALUES (?, ?, ?)");
+            $stmt->execute([$user['id'], $target_savings, $preferred_minimum_balance]);
+        }
+        $success = "Settings saved.";
+    }
+}
+
+// Load existing goals to populate form fields
+$stmt = $db->prepare("SELECT * FROM goals WHERE user_id = ?");
+$stmt->execute([$user['id']]);
+$goal = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['target_savings' => '', 'preferred_minimum_balance' => ''];
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +46,7 @@
   <div class="home-container">
     <h2>Set Your Goals & Reminders</h2>
     
-    <form action="goals.php" method="POST">
+    <form action="goalsreminders.php" method="POST">
 
       <div class="form-group">
         <label for="target_savings">Target Savings Amount (optional)</label>
@@ -34,6 +70,9 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $target_savings = $_POST['target_savings'] ?? null;
-    $prefered_minimum_balance = $_POST['prefered_minimum_balance'] ?? null;
+    $prefered_minimum_balance = $_POST['preferred_minimum_balance'] ?? null;
+    
+    $target_savings = (is_numeric($target_savings) && $target_savings >= 0) ? floatval($target_savings) : null;
+    $preferred_minimum_balance = (is_numeric($preferred_minimum_balance) && $preferred_minimum_balance >= 0) ? floatval($preferred_minimum_balance) : null;
 }
 ?>
