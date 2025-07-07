@@ -7,7 +7,6 @@ $db = getDB();
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $target_savings = $_POST['target_savings'] ?? null;
     $preferred_minimum_balance = $_POST['preferred_minimum_balance'] ?? null;
-
     if (($target_savings !== null && (!is_numeric($target_savings) || $target_savings < 0)) ||
         ($preferred_minimum_balance !== null && (!is_numeric($preferred_minimum_balance) || $preferred_minimum_balance < 0))) {
         $error = "Please enter valid positive numbers or leave fields empty.";
@@ -34,6 +33,16 @@ $stmt->execute([$user['id']]);
 $goal = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['target_savings' => '', 'preferred_minimum_balance' => ''];
 ?>
 
+<?php
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $target_savings = $_POST['target_savings'] ?? null;
+    $prefered_minimum_balance = $_POST['preferred_minimum_balance'] ?? null;
+    
+    $target_savings = (is_numeric($target_savings) && $target_savings >= 0) ? floatval($target_savings) : null;
+    $preferred_minimum_balance = (is_numeric($preferred_minimum_balance) && $preferred_minimum_balance >= 0) ? floatval($preferred_minimum_balance) : null;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,8 +63,8 @@ $goal = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['target_savings' => '', 'preferred_mi
       </div>
 
       <div class="form-group">
-        <label for="prefered_minimum_balance">Preferred Minimum Balance (optional)</label>
-        <input type="number" id="prefered_minimum_balance" name="prefered_minimum_balance" step="0.01" placeholder="e.g. 200.00" />
+        <label for="preferred_minimum_balance">Preferred Minimum Balance (optional)</label>
+        <input type="number" id="preferred_minimum_balance" name="preferred_minimum_balance" step="0.01" placeholder="e.g. 200.00" />
       </div>
 
       <button type="submit" class="action-button">Save Settings</button>
@@ -67,12 +76,3 @@ $goal = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['target_savings' => '', 'preferred_mi
   </div>
 </body>
 </html>
-<?php
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $target_savings = $_POST['target_savings'] ?? null;
-    $prefered_minimum_balance = $_POST['preferred_minimum_balance'] ?? null;
-    
-    $target_savings = (is_numeric($target_savings) && $target_savings >= 0) ? floatval($target_savings) : null;
-    $preferred_minimum_balance = (is_numeric($preferred_minimum_balance) && $preferred_minimum_balance >= 0) ? floatval($preferred_minimum_balance) : null;
-}
-?>

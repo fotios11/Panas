@@ -194,3 +194,30 @@ input[type="currency"]:focus {
   box-shadow: 0 0 5px #00a89d;
   background-color: #555;
 }
+
+.action-button {
+  background-color: #00a89d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  margin-right: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.cancel-button {
+  background-color: #00a89d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.dashboard-actions a.action-button {
+  width: 100%;
+  text-align: center;
+  display: inline-block;
+}

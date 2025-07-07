@@ -16,8 +16,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         try {
             $db = getDB();
-            $stmt = $db->prepare("INSERT INTO users (username, email, password, currency, starting_balance) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$username, $email, $password, $currency, $starting_balance]);
+
+            // Insert user into `users` table (no starting_balance column)
+            $stmt = $db->prepare("INSERT INTO users (username, email, password, currency) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$username, $email, $password, $currency]);
+
+            // Get the new user's ID
+            $user_id = $db->lastInsertId();
+
+            // Insert starting balance as income transaction if > 0
+            if ($starting_balance > 0) {
+                $stmt = $db->prepare("INSERT INTO transactions (user_id, date, description, amount, category, type) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([
+                    $user_id,
+                    date('Y-m-d'),
+                    'Starting Balance',
+                    $starting_balance,
+                    'Initial Deposit',
+                    'income'
+                ]);
+            }
+
             header("Location: login.php");
             exit();
         } catch (PDOException $e) {
@@ -67,7 +86,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <label for="starting_balance">Starting Balance (optional)</label>
         <input type="number" id="starting_balance" name="starting_balance" step="0.01" min="0" placeholder="0.00" />
       </div>
-
 
       <button type="submit" class="register-button">Register</button>
     </form>

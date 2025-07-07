@@ -3,6 +3,7 @@ require_once 'db.php';
 requireLogin();
 
 $user = getCurrentUser();
+$db = getDB();
 $error = null;
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -10,52 +11,46 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $description = trim($_POST["description"]);
     $amount = $_POST["amount"];
     $category = trim($_POST["category"]) ?: null;
+    $override = isset($_POST["override"]) ? (bool)$_POST["override"] : false;
 
     if (!$date || !$description || !is_numeric($amount) || $amount <= 0) {
         $error = "Please fill all fields correctly.";
     } else {
-        $db = getDB();
+        $user_id = $user['id'];
+        $type = 'expense';
 
-        if (basename($_SERVER['PHP_SELF']) === 'addexpense.php') {
-            // Check if expense doesn't exceed balance
-            $balance = getUserBalance($user['id']);
-            if ($amount > $balance) {
-                $error = "Expense exceeds your current balance.";
-            } else {
-                $type = 'expense';
-            }
-        } else {
-            $type = 'income';
-        }
-
-        $db = getDB();
-        $stmt = $db->prepare("SELECT
-          (SELECT IFNULL(SUM(amount),0) FROM transactions WHERE user_id = ? AND type = 'income') -
-          (SELECT IFNULL(SUM(amount),0) FROM transactions WHERE user_id = ? AND type = 'expense')
-          AS current_balance");
+        // Calculate current balance
+        $stmt = $db->prepare("SELECT 
+            (SELECT IFNULL(SUM(amount),0) FROM transactions WHERE user_id = ? AND type = 'income') -
+            (SELECT IFNULL(SUM(amount),0) FROM transactions WHERE user_id = ? AND type = 'expense')
+            AS current_balance");
         $stmt->execute([$user_id, $user_id]);
         $current_balance = (float)$stmt->fetchColumn();
 
+        // Fetch preferred minimum balance
         $stmt = $db->prepare("SELECT preferred_minimum_balance FROM goals WHERE user_id = ?");
         $stmt->execute([$user_id]);
         $preferred_minimum_balance = $stmt->fetchColumn();
-
         if ($preferred_minimum_balance === false) {
-          $preferred_minimum_balance = 0; // default if not set
+            $preferred_minimum_balance = 0;
         }
 
         $new_balance = $current_balance - $amount;
 
-        if ($new_balance < $preferred_minimum_balance) {
+        if (!$override && $new_balance < $preferred_minimum_balance) {
+            // Redirect to confirmation page
+            header("Location: confirm_expense.php?amount=" . urlencode($amount) .
+                   "&description=" . urlencode($description) .
+                   "&date=" . urlencode($date) .
+                   "&category=" . urlencode($category));
+            exit;
+        }
 
-        $error = "Adding this expense would bring your balance below your preferred minimum balance of $preferred_minimum_balance.";
-        echo "<p style='color:red;'>$error</p>";
-        exit;
-      }
-
+        // Proceed with expense insertion
         if (!$error) {
-            $stmt = $db->prepare("INSERT INTO transactions (user_id, date, description, amount, category, type) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$user['id'], $date, $description, $amount, $category, $type]);
+            $stmt = $db->prepare("INSERT INTO transactions (user_id, date, description, amount, category, type)
+                                  VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$user_id, $date, $description, $amount, $category, $type]);
             header("Location: viewbudget.php");
             exit();
         }
@@ -74,6 +69,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <body>
   <div class="register-container">
     <h2>Add New Expense</h2>
+
+    <?php if ($error): ?>
+      <p class="error"><?php echo htmlspecialchars($error); ?></p>
+    <?php endif; ?>
+
     <form action="addexpense.php" method="POST">
       <div class="form-group">
         <label for="date">Date</label>
@@ -94,23 +94,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <label for="category">Category (optional)</label>
         <input type="text" id="category" name="category" />
       </div>
-
       <button type="submit" class="action-button">Add Expense</button>
-    </form>
-
-    <div class="footer">
+    
+    <div class="settings">
       <a href="homepage.php">← Back to Home</a>
     </div>
-  </div>
-</body>
-</html>
-<?php
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $date = $_POST["date"];
-    $description = $_POST["description"];
-    $amount = $_POST["amount"];
-    $category = $_POST["category"] ?? null;
 
-    // TODO: Validate input and insert into database
-}
-?>
+    </form>
