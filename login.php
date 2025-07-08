@@ -1,32 +1,41 @@
 <?php
+// Include Database Connection
 require_once 'db.php';
 
+// Handle Form Submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $username = trim($_POST["username"]);
-    $password = $_POST["password"];
+  // Retrieve and Sanitize User Input
+  $username = trim($_POST["username"]);
+  $password = $_POST["password"];
 
-    if (!$username || !$password) {
-        $error = "Please enter username and password.";
+  // Validate Input
+  if (!$username || !$password) {
+    $error = "Please enter username and password.";
+  } else {
+    // Query Database for User
+    $db = getDB();
+    $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
+    $stmt->execute([$username]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Verify Credentials
+    if ($user && $user['password'] === $password) {
+      // Set Session and Redirect
+      $_SESSION['user_id'] = $user['id'];
+      header("Location: homepage.php");
+      exit();
     } else {
-        $db = getDB();
-        $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
-        $stmt->execute([$username]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($user && $user['password'] === $password) { // no hashing as per request
-            $_SESSION['user_id'] = $user['id'];
-            header("Location: homepage.php");
-            exit();
-        } else {
-            $error = "Invalid credentials.";
-        }
+      // Set Error for Invalid Credentials
+      $error = "Invalid credentials.";
     }
+  }
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Page Metadata and Styles -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login - Budget Tracker</title>
@@ -35,6 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <body>
   <div class="login-container">
     <h2>Login to Budget Tracker</h2>
+    <!-- Login Form -->
     <form action="login.php" method="POST">
       <div class="form-group">
         <label for="username">Username</label>
@@ -48,6 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
       <button type="submit" class="login-button">Login</button>
     </form>
+    <!-- Registration Link -->
     <p>Don't have an account? <a href="register.php">Register here</a></p>
   </div>
 </body>

@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Database Connection
 function getDB() {
     static $db = null;
     if ($db === null) {
@@ -10,10 +11,12 @@ function getDB() {
     return $db;
 }
 
+// Check Login Status
 function isLoggedIn() {
     return isset($_SESSION['user_id']);
 }
 
+// Require User Login
 function requireLogin() {
     if (!isLoggedIn()) {
         header("Location: login.php");
@@ -21,6 +24,7 @@ function requireLogin() {
     }
 }
 
+// Get Current User Data
 function getCurrentUser() {
     if (!isLoggedIn()) return null;
     $db = getDB();
@@ -29,6 +33,7 @@ function getCurrentUser() {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+// Get User Balance
 function getUserBalance($user_id) {
     $db = getDB();
     // Sum incomes - sum expenses + starting_balance
